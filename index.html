@@ -124,6 +124,15 @@
             background: #545b62;
         }
         
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
         .hidden {
             display: none !important;
         }
@@ -228,6 +237,24 @@
             text-align: center;
         }
         
+        .data-controls {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .data-controls h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .data-controls .btn {
+            margin: 5px;
+        }
+        
         @media (max-width: 768px) {
             .cards-grid {
                 grid-template-columns: 1fr;
@@ -243,12 +270,23 @@
     <div class="container">
         <h1>부암동 건축 점검 보고서</h1>
         
+        <!-- 데이터 관리 컨트롤 -->
+        <div class="data-controls">
+            <h3>📱 데이터 관리</h3>
+            <button class="btn btn-secondary" onclick="exportData()">💾 데이터 백업</button>
+            <button class="btn btn-primary" onclick="importData()">📥 데이터 복원</button>
+            <button class="btn btn-danger" onclick="clearAllData()">🗑️ 모든 데이터 삭제</button>
+            <input type="file" id="importFile" class="hidden" accept=".json" onchange="handleImportFile(event)">
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                * 사진은 브라우저에 자동 저장됩니다. 새로고침해도 사라지지 않습니다.
+            </div>
+        </div>
+        
         <!-- 임대인 협의사항 -->
         <div class="section landlord-section">
             <div class="section-title">🏠 임대인 협의사항 (13개 항목)</div>
             
             <div class="cards-grid">
-                <!-- 별표 5개: ⭐⭐⭐⭐⭐ -->
                 <div class="card" data-card-id="landlord-1">
                     <div class="card-header">
                         <div class="card-number">1</div>
@@ -268,14 +306,14 @@
                             <div class="image-counter" id="counter-landlord-1">0/0</div>
                         </div>
                     </div>
-                    <div class="card-title">건물외벽 곰팡이 청소</div>
-                    <div class="card-description">건물 외벽에 발생한 곰팡이로 인한 건강 및 구조적 위험</div>
+                    <div class="card-title">스위치</div>
+                    <div class="card-description">현관 및 실내 스위치 상태 점검</div>
                 </div>
                 
                 <div class="card" data-card-id="landlord-2">
                     <div class="card-header">
                         <div class="card-number">2</div>
-                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                        <div class="stars">⭐⭐</div>
                     </div>
                     <div class="image-gallery">
                         <input type="file" id="fileInput-landlord-2" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-2')">
@@ -285,19 +323,14 @@
                             <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-2').click()">📸 카메라</button>
                         </div>
                         <div class="carousel-container" id="container-landlord-2">
-                            <div class="carousel-track" id="carousel-landlord-2">
-                                <div class="carousel-slide">
-                                    <img src="images/17_계단난간손잡이설치2.jpg" alt="계단 난간 손잡이" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-2', 0)">×</button>
-                                </div>
-                            </div>
+                            <div class="carousel-track" id="carousel-landlord-2"></div>
                             <button class="carousel-nav prev" onclick="prevImage('landlord-2')">‹</button>
                             <button class="carousel-nav next" onclick="nextImage('landlord-2')">›</button>
-                            <div class="image-counter" id="counter-landlord-2">1/1</div>
+                            <div class="image-counter" id="counter-landlord-2">0/0</div>
                         </div>
                     </div>
-                    <div class="card-title">계단 난간 손잡이 설치</div>
-                    <div class="card-description">계단 안전을 위한 난간 손잡이 보수 및 설치</div>
+                    <div class="card-title">통신함 커버</div>
+                    <div class="card-description">통신함 커버 상태 및 정리</div>
                 </div>
                 
                 <div class="card" data-card-id="landlord-3">
@@ -313,306 +346,27 @@
                             <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-3').click()">📸 카메라</button>
                         </div>
                         <div class="carousel-container" id="container-landlord-3">
-                            <div class="carousel-track" id="carousel-landlord-3">
-                                <div class="carousel-slide">
-                                    <img src="images/09_2층창고누수확인.jpg" alt="2층 화장실 천장 누수" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-3', 0)">×</button>
-                                </div>
-                            </div>
+                            <div class="carousel-track" id="carousel-landlord-3"></div>
                             <button class="carousel-nav prev" onclick="prevImage('landlord-3')">‹</button>
                             <button class="carousel-nav next" onclick="nextImage('landlord-3')">›</button>
-                            <div class="image-counter" id="counter-landlord-3">1/1</div>
+                            <div class="image-counter" id="counter-landlord-3">0/0</div>
                         </div>
                     </div>
-                    <div class="card-title">2층 화장실 천장 누수</div>
-                    <div class="card-description">2층 화장실 천장 누수 확인 및 방수 보수</div>
-                </div>
-                
-                <div class="card" data-card-id="landlord-4">
-                    <div class="card-header">
-                        <div class="card-number">4</div>
-                        <div class="stars">⭐⭐⭐⭐⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-4" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-4')">
-                        <input type="file" id="cameraInput-landlord-4" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-4')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-4').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-4').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-4">
-                            <div class="carousel-track" id="carousel-landlord-4">
-                                <div class="carousel-slide">
-                                    <img src="images/03_바닥1.jpg" alt="1층 바닥 보수" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-4', 0)">×</button>
-                                </div>
-                            </div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-4')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-4')">›</button>
-                            <div class="image-counter" id="counter-landlord-4">1/1</div>
-                        </div>
-                    </div>
-                    <div class="card-title">1층 바닥 보수</div>
-                    <div class="card-description">1층 바닥의 심각한 파손 부분 긴급 보수</div>
-                </div>
-                
-                <div class="card" data-card-id="landlord-5">
-                    <div class="card-header">
-                        <div class="card-number">5</div>
-                        <div class="stars">⭐⭐⭐⭐⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-5" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-5')">
-                        <input type="file" id="cameraInput-landlord-5" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-5')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-5').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-5').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-5">
-                            <div class="carousel-track" id="carousel-landlord-5">
-                                <div class="carousel-slide">
-                                    <img src="images/04_바닥2.jpg" alt="2층 바닥 보수" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-5', 0)">×</button>
-                                </div>
-                            </div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-5')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-5')">›</button>
-                            <div class="image-counter" id="counter-landlord-5">1/1</div>
-                        </div>
-                    </div>
-                    <div class="card-title">2층 바닥 보수</div>
-                    <div class="card-description">2층 바닥 균열 및 손상 부분 보수</div>
-                </div>
-                
-                <!-- 별표 4개: ⭐⭐⭐⭐ -->
-                <div class="card" data-card-id="landlord-6">
-                    <div class="card-header">
-                        <div class="card-number">6</div>
-                        <div class="stars">⭐⭐⭐⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-6" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-6')">
-                        <input type="file" id="cameraInput-landlord-6" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-6')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-6').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-6').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-6">
-                            <div class="carousel-track" id="carousel-landlord-6">
-                                <div class="carousel-slide">
-                                    <img src="images/16_4층화장실바닥누수확인.jpg" alt="4층 화장실 바닥 누수" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-6', 0)">×</button>
-                                </div>
-                            </div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-6')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-6')">›</button>
-                            <div class="image-counter" id="counter-landlord-6">1/1</div>
-                        </div>
-                    </div>
-                    <div class="card-title">4층 화장실 바닥 누수</div>
-                    <div class="card-description">4층 화장실 바닥 누수 확인 및 보수</div>
-                </div>
-                
-                <div class="card" data-card-id="landlord-7">
-                    <div class="card-header">
-                        <div class="card-number">7</div>
-                        <div class="stars">⭐⭐⭐⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-7" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-7')">
-                        <input type="file" id="cameraInput-landlord-7" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-7')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-7').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-7').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-7">
-                            <div class="carousel-track" id="carousel-landlord-7"></div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-7')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-7')">›</button>
-                            <div class="image-counter" id="counter-landlord-7">0/0</div>
-                        </div>
-                    </div>
-                    <div class="card-title">조경 정리</div>
-                    <div class="card-description">건물 주변 조경 정리 및 환경 개선 작업</div>
-                </div>
-                
-                <!-- 별표 3개: ⭐⭐⭐ -->
-                <div class="card" data-card-id="landlord-8">
-                    <div class="card-header">
-                        <div class="card-number">8</div>
-                        <div class="stars">⭐⭐⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-8" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-8')">
-                        <input type="file" id="cameraInput-landlord-8" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-8')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-8').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-8').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-8">
-                            <div class="carousel-track" id="carousel-landlord-8">
-                                <div class="carousel-slide">
-                                    <img src="images/12_2층폴딩도어유격1.jpg" alt="2층 폴딩도어 유격1" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-8', 0)">×</button>
-                                </div>
-                            </div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-8')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-8')">›</button>
-                            <div class="image-counter" id="counter-landlord-8">1/1</div>
-                        </div>
-                    </div>
-                    <div class="card-title">2층 폴딩도어 유격1</div>
-                    <div class="card-description">2층 폴딩도어의 유격 조정 및 보수</div>
-                </div>
-                
-                <div class="card" data-card-id="landlord-9">
-                    <div class="card-header">
-                        <div class="card-number">9</div>
-                        <div class="stars">⭐⭐⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-9" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-9')">
-                        <input type="file" id="cameraInput-landlord-9" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-9')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-9').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-9').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-9">
-                            <div class="carousel-track" id="carousel-landlord-9">
-                                <div class="carousel-slide">
-                                    <img src="images/13_2층폴딩도어유격2.jpg" alt="2층 폴딩도어 유격2" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-9', 0)">×</button>
-                                </div>
-                            </div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-9')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-9')">›</button>
-                            <div class="image-counter" id="counter-landlord-9">1/1</div>
-                        </div>
-                    </div>
-                    <div class="card-title">2층 폴딩도어 유격2</div>
-                    <div class="card-description">2층 폴딩도어의 추가 유격 문제 해결</div>
-                </div>
-                
-                <!-- 별표 2개: ⭐⭐ -->
-                <div class="card" data-card-id="landlord-10">
-                    <div class="card-header">
-                        <div class="card-number">10</div>
-                        <div class="stars">⭐⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-10" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-10')">
-                        <input type="file" id="cameraInput-landlord-10" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-10')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-10').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-10').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-10">
-                            <div class="carousel-track" id="carousel-landlord-10"></div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-10')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-10')">›</button>
-                            <div class="image-counter" id="counter-landlord-10">0/0</div>
-                        </div>
-                    </div>
-                    <div class="card-title">건물 외부 조명 점검</div>
-                    <div class="card-description">건물 외부 조명 시설 점검 및 교체</div>
-                </div>
-                
-                <!-- 별표 1개: ⭐ -->
-                <div class="card" data-card-id="landlord-11">
-                    <div class="card-header">
-                        <div class="card-number">11</div>
-                        <div class="stars">⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-11" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-11')">
-                        <input type="file" id="cameraInput-landlord-11" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-11')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-11').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-11').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-11">
-                            <div class="carousel-track" id="carousel-landlord-11">
-                                <div class="carousel-slide">
-                                    <img src="images/01_스위치.jpg" alt="스위치 점검" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-11', 0)">×</button>
-                                </div>
-                            </div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-11')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-11')">›</button>
-                            <div class="image-counter" id="counter-landlord-11">1/1</div>
-                        </div>
-                    </div>
-                    <div class="card-title">스위치 점검</div>
-                    <div class="card-description">전기 스위치 작동 상태 점검 및 교체</div>
-                </div>
-                
-                <div class="card" data-card-id="landlord-12">
-                    <div class="card-header">
-                        <div class="card-number">12</div>
-                        <div class="stars">⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-12" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-12')">
-                        <input type="file" id="cameraInput-landlord-12" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-12')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-12').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-12').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-12">
-                            <div class="carousel-track" id="carousel-landlord-12">
-                                <div class="carousel-slide">
-                                    <img src="images/02_통신함커버.jpg" alt="통신함 커버" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-12', 0)">×</button>
-                                </div>
-                            </div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-12')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-12')">›</button>
-                            <div class="image-counter" id="counter-landlord-12">1/1</div>
-                        </div>
-                    </div>
-                    <div class="card-title">통신함 커버</div>
-                    <div class="card-description">통신함 커버 보수 및 교체</div>
-                </div>
-                
-                <div class="card" data-card-id="landlord-13">
-                    <div class="card-header">
-                        <div class="card-number">13</div>
-                        <div class="stars">⭐</div>
-                    </div>
-                    <div class="image-gallery">
-                        <input type="file" id="fileInput-landlord-13" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-13')">
-                        <input type="file" id="cameraInput-landlord-13" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-13')">
-                        <div class="image-controls">
-                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-13').click()">📷 사진 추가</button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-13').click()">📸 카메라</button>
-                        </div>
-                        <div class="carousel-container" id="container-landlord-13">
-                            <div class="carousel-track" id="carousel-landlord-13">
-                                <div class="carousel-slide">
-                                    <img src="images/05_계단손잡이.jpg" alt="계단 손잡이 보수" class="carousel-image">
-                                    <button class="image-delete" onclick="deleteImage('landlord-13', 0)">×</button>
-                                </div>
-                            </div>
-                            <button class="carousel-nav prev" onclick="prevImage('landlord-13')">‹</button>
-                            <button class="carousel-nav next" onclick="nextImage('landlord-13')">›</button>
-                            <div class="image-counter" id="counter-landlord-13">1/1</div>
-                        </div>
-                    </div>
-                    <div class="card-title">계단 손잡이 보수</div>
-                    <div class="card-description">기존 계단 손잡이 부식 확인 및 보수</div>
+                    <div class="card-title">바닥 상태</div>
+                    <div class="card-description">1층 바닥 상태 점검 및 정리</div>
                 </div>
             </div>
         </div>
         
-        <!-- 전임차인 협의사항 -->
+        <!-- 임차인 협의사항 -->
         <div class="section tenant-section">
-            <div class="section-title">👤 전임차인 협의사항 (1개 항목)</div>
+            <div class="section-title">👤 임차인 협의사항 (1개 항목)</div>
             
             <div class="cards-grid">
                 <div class="card" data-card-id="tenant-1">
                     <div class="card-header">
                         <div class="card-number">1</div>
-                        <div class="stars">⭐</div>
+                        <div class="stars">⭐⭐⭐</div>
                     </div>
                     <div class="image-gallery">
                         <input type="file" id="fileInput-tenant-1" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'tenant-1')">
@@ -636,15 +390,48 @@
         
         <div class="summary">
             <h2>📋 점검 요약</h2>
-            <p>총 14개 항목 | 임대인 협의 13개 | 전임차인 협의 1개</p>
-            <p><strong>별표별 분류:</strong> ⭐⭐⭐⭐⭐(5개) > ⭐⭐⭐⭐(2개) > ⭐⭐⭐(2개) > ⭐⭐(1개) > ⭐(4개)</p>
+            <p>총 4개 항목 (테스트 버전) | 임대인 협의 3개 | 임차인 협의 1개</p>
+            <p><strong>별표별 분류:</strong> ⭐⭐⭐⭐⭐(2개) > ⭐⭐⭐(1개) > ⭐⭐(1개)</p>
         </div>
     </div>
 
     <script>
-        // 이미지 관리 객체
-        const imageData = {};
-
+        // 이미지 관리 객체 - localStorage와 동기화
+        let imageData = {};
+        
+        // LocalStorage 키
+        const STORAGE_KEY = 'jinbu-image-data';
+        
+        // 페이지 로드 시 데이터 복원
+        function loadDataFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    imageData = JSON.parse(stored);
+                    console.log('데이터 복원됨:', imageData);
+                    
+                    // 모든 카드의 이미지 표시
+                    Object.keys(imageData).forEach(cardId => {
+                        updateCarousel(cardId);
+                    });
+                }
+            } catch (error) {
+                console.error('데이터 복원 실패:', error);
+                imageData = {};
+            }
+        }
+        
+        // 데이터를 localStorage에 저장
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(imageData));
+                console.log('데이터 저장됨');
+            } catch (error) {
+                console.error('데이터 저장 실패:', error);
+                alert('데이터 저장에 실패했습니다. 브라우저 저장 공간이 부족할 수 있습니다.');
+            }
+        }
+        
         // 파일 업로드 처리
         function handleFileUpload(event, cardId) {
             console.log('handleFileUpload called for:', cardId);
@@ -664,7 +451,7 @@
             // 파일 입력 초기화
             event.target.value = '';
         }
-
+        
         // 카러셀에 이미지 추가
         function addImageToCarousel(cardId, imageSrc, fileName) {
             if (!imageData[cardId]) {
@@ -673,17 +460,24 @@
             
             imageData[cardId].push({
                 src: imageSrc,
-                name: fileName || 'image'
+                name: fileName || 'image',
+                timestamp: new Date().toISOString()
             });
             
             updateCarousel(cardId);
+            saveDataToStorage(); // 데이터 저장
         }
-
+        
         // 카러셀 업데이트
         function updateCarousel(cardId) {
             const carousel = document.getElementById(`carousel-${cardId}`);
             const container = document.getElementById(`container-${cardId}`);
             const images = imageData[cardId] || [];
+            
+            if (!carousel || !container) {
+                console.error('Carousel elements not found for:', cardId);
+                return;
+            }
             
             carousel.innerHTML = '';
             
@@ -692,7 +486,7 @@
                 slide.className = 'carousel-slide';
                 slide.innerHTML = `
                     <img src="${image.src}" alt="${image.name}" class="carousel-image">
-                    <button class="image-delete" onclick="deleteImage('${cardId}', ${index})">×</button>
+                    <button class="image-delete" onclick="deleteImage('${cardId}', ${index})" title="삭제">×</button>
                 `;
                 carousel.appendChild(slide);
             });
@@ -706,15 +500,32 @@
             
             updateImageCounter(cardId);
         }
-
+        
         // 이미지 삭제
         function deleteImage(cardId, index) {
-            if (imageData[cardId]) {
-                imageData[cardId].splice(index, 1);
-                updateCarousel(cardId);
+            if (imageData[cardId] && imageData[cardId][index]) {
+                const confirmDelete = confirm('이 사진을 삭제하시겠습니까?');
+                if (confirmDelete) {
+                    imageData[cardId].splice(index, 1);
+                    updateCarousel(cardId);
+                    saveDataToStorage(); // 데이터 저장
+                }
             }
         }
-
+        
+        // 이미지 카운터 업데이트
+        function updateImageCounter(cardId) {
+            const counter = document.getElementById(`counter-${cardId}`);
+            const carousel = document.getElementById(`carousel-${cardId}`);
+            const images = imageData[cardId] || [];
+            
+            if (!counter || !carousel) return;
+            
+            const currentIndex = parseInt(carousel.dataset.currentIndex || '0');
+            const total = images.length;
+            counter.textContent = `${Math.min(currentIndex + 1, total)}/${total}`;
+        }
+        
         // 이전 이미지
         function prevImage(cardId) {
             const carousel = document.getElementById(`carousel-${cardId}`);
@@ -732,7 +543,7 @@
             carousel.style.transform = `translateX(-${currentIndex * 100}%)`;
             updateImageCounter(cardId);
         }
-
+        
         // 다음 이미지
         function nextImage(cardId) {
             const carousel = document.getElementById(`carousel-${cardId}`);
@@ -750,44 +561,75 @@
             carousel.style.transform = `translateX(-${currentIndex * 100}%)`;
             updateImageCounter(cardId);
         }
-
-        // 이미지 카운터 업데이트
-        function updateImageCounter(cardId) {
-            const counter = document.getElementById(`counter-${cardId}`);
-            const carousel = document.getElementById(`carousel-${cardId}`);
-            const images = imageData[cardId] || [];
-            
-            if (images.length > 0) {
-                const currentIndex = parseInt(carousel.dataset.currentIndex || '0') + 1;
-                counter.textContent = `${currentIndex}/${images.length}`;
-                counter.style.display = 'block';
-            } else {
-                counter.textContent = '0/0';
-                counter.style.display = 'none';
+        
+        // 데이터 백업 (JSON 파일로 다운로드)
+        function exportData() {
+            try {
+                const dataStr = JSON.stringify(imageData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `jinbu-backup-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                alert('데이터가 백업되었습니다.');
+            } catch (error) {
+                console.error('백업 실패:', error);
+                alert('백업에 실패했습니다.');
             }
         }
-
-        // 초기화 - 기존 이미지들을 imageData에 등록
+        
+        // 데이터 복원 버튼 클릭
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+        
+        // 데이터 복원 파일 처리
+        function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    const confirmImport = confirm('기존 데이터를 모두 교체하시겠습니까?');
+                    if (confirmImport) {
+                        imageData = importedData;
+                        saveDataToStorage();
+                        location.reload(); // 페이지 새로고침으로 데이터 적용
+                    }
+                } catch (error) {
+                    console.error('복원 실패:', error);
+                    alert('잘못된 백업 파일입니다.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        // 모든 데이터 삭제
+        function clearAllData() {
+            const confirmClear = confirm('모든 사진과 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.');
+            if (confirmClear) {
+                const doubleConfirm = confirm('정말로 모든 데이터를 삭제하시겠습니까?');
+                if (doubleConfirm) {
+                    imageData = {};
+                    saveDataToStorage();
+                    location.reload();
+                }
+            }
+        }
+        
+        // 페이지 로드 시 데이터 복원
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.carousel-slide img').forEach(img => {
-                const cardElement = img.closest('[data-card-id]');
-                const cardId = cardElement.dataset.cardId;
-                
-                if (!imageData[cardId]) {
-                    imageData[cardId] = [];
-                }
-                
-                imageData[cardId].push({
-                    src: img.src,
-                    name: img.alt || 'image'
-                });
-                
-                updateImageCounter(cardId);
-                const container = document.getElementById(`container-${cardId}`);
-                if (container) {
-                    container.style.display = 'block';
-                }
-            });
+            loadDataFromStorage();
+        });
+        
+        // 페이지 언로드 시 데이터 저장 (안전장치)
+        window.addEventListener('beforeunload', function() {
+            saveDataToStorage();
         });
     </script>
 </body>
