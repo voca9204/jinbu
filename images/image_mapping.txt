@@ -1,0 +1,46 @@
+# 진부 프로젝트 이미지 매칭 가이드
+
+## 📸 이미지 파일 매칭 리스트
+
+### 첫 번째 업로드 (10개 이미지):
+1. Image 1 → 01_switch.jpg (스위치)
+2. Image 2 → 02_network_box.jpg (통신함 커버)
+3. Image 3 → 03_floor_damage.jpg (바닥1 - 심각한 파손)
+4. Image 4 → 04_floor_crack.jpg (바닥2 - 균열)
+5. Image 5 → 05_handrail_rust.jpg (계단 손잡이 - 부식)
+6. Image 6 → 06_wall_shelf.jpg (벽 부착물)
+7. Image 7 → 07_kitchen_island.jpg (아일랜드 및 벽면 가구)
+8. Image 8 → 08_wood_bench.jpg (벽 목공 벤치)
+9. Image 9 → 09_water_damage.jpg (2층 창고 누수 확인)
+10. Image 10 → 10_ceiling_damage.jpg (2층 창고 천장)
+
+### 두 번째 업로드 (7개 이미지):
+11. Image 1 → 11_sink.jpg (2층 수도 설비)
+12. Image 2 → 12_folding_door1.jpg (2층 폴딩도어 유격1)
+13. Image 3 → 13_folding_door2.jpg (2층 폴딩도어 유격2)
+14. Image 4 → 14_stair_railing1.jpg (계단 난간 손잡이 설치)
+15. Image 5 → 15_stair_railing2.jpg (계단 난간 손잡이 마감)
+16. Image 6 → 16_bathroom_floor.jpg (4층 화장실 사이 바닥 누수)
+17. Image 7 → 17_final_railing.jpg (계단 난간 손잡이 최종 설치)
+
+## 📂 저장 경로:
+/Users/voca/projects/personal/jinbu/images/
+
+## 🏷️ 한국어 라벨 매칭:
+- 스위치 → 01_switch.jpg
+- 통신함 커버 → 02_network_box.jpg  
+- 바닥1 → 03_floor_damage.jpg
+- 바닥2 → 04_floor_crack.jpg
+- 계단 손잡이 → 05_handrail_rust.jpg
+- 벽 부착물 → 06_wall_shelf.jpg
+- 아일랜드 및 벽면 가구 → 07_kitchen_island.jpg
+- 벽 목공 벤치 → 08_wood_bench.jpg
+- 2층 창고 누수 확인 → 09_water_damage.jpg
+- 2층 창고 천장 → 10_ceiling_damage.jpg
+- 2층 수도 설거 → 11_sink.jpg
+- 2층 폴딩도어 유격1 → 12_folding_door1.jpg
+- 2층 폴딩도어 유격2 → 13_folding_door2.jpg
+- 계단 난간 손잡이 설치 → 14_stair_railing1.jpg
+- 계단 난간 손잡이 마감 → 15_stair_railing2.jpg
+- 4층 화장실 사이 바닥 누수 확인 → 16_bathroom_floor.jpg
+- 계단 난간 손잡이 설치 → 17_final_railing.jpg
