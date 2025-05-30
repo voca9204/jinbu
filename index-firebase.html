@@ -331,7 +331,7 @@
         
         <!-- 임대인 협의사항 -->
         <div class="section landlord-section">
-            <div class="section-title">🏠 임대인 협의사항 (3개 항목 - 테스트 버전)</div>
+            <div class="section-title">🏠 임대인 협의사항 (7개 항목)</div>
             
             <div class="cards-grid">
                 <div class="card" data-card-id="landlord-1">
@@ -356,8 +356,8 @@
                             <div class="image-counter" id="counter-landlord-1">0/0</div>
                         </div>
                     </div>
-                    <div class="card-title">스위치</div>
-                    <div class="card-description">현관 및 실내 스위치 상태 점검</div>
+                    <div class="card-title">건물외벽 곰팡이 청소</div>
+                    <div class="card-description">건물 외벽에 발생한 곰팡이로 인한 건강 및 구조적 위험</div>
                 </div>
                 
                 <div class="card" data-card-id="landlord-2">
@@ -408,16 +408,179 @@
                             <div class="image-counter" id="counter-landlord-3">0/0</div>
                         </div>
                     </div>
-                    <div class="card-title">바닥 상태</div>
+                    <div class="card-title">바닥1</div>
                     <div class="card-description">1층 바닥 상태 점검 및 정리</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-4">
+                    <div class="card-header">
+                        <div class="card-number">4</div>
+                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-4" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-4')">
+                        <input type="file" id="cameraInput-landlord-4" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-4')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-4').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-4').click()">📸 카메라</button>
+                        </div>
+                        <div class="upload-progress hidden" id="progress-landlord-4">
+                            <div class="upload-progress-bar"></div>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-4">
+                            <div class="carousel-track" id="carousel-landlord-4"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-4')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-4')">›</button>
+                            <div class="image-counter" id="counter-landlord-4">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">바닥2</div>
+                    <div class="card-description">2층 바닥 상태 점검</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-5">
+                    <div class="card-header">
+                        <div class="card-number">5</div>
+                        <div class="stars">⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-5" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-5')">
+                        <input type="file" id="cameraInput-landlord-5" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-5')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-5').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-5').click()">📸 카메라</button>
+                        </div>
+                        <div class="upload-progress hidden" id="progress-landlord-5">
+                            <div class="upload-progress-bar"></div>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-5">
+                            <div class="carousel-track" id="carousel-landlord-5"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-5')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-5')">›</button>
+                            <div class="image-counter" id="counter-landlord-5">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">계단 손잡이</div>
+                    <div class="card-description">계단 안전을 위한 손잡이 점검</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-6">
+                    <div class="card-header">
+                        <div class="card-number">6</div>
+                        <div class="stars">⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-6" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-6')">
+                        <input type="file" id="cameraInput-landlord-6" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-6')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-6').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-6').click()">📸 카메라</button>
+                        </div>
+                        <div class="upload-progress hidden" id="progress-landlord-6">
+                            <div class="upload-progress-bar"></div>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-6">
+                            <div class="carousel-track" id="carousel-landlord-6"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-6')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-6')">›</button>
+                            <div class="image-counter" id="counter-landlord-6">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">벽부착물</div>
+                    <div class="card-description">벽면 부착물 상태 점검</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-7">
+                    <div class="card-header">
+                        <div class="card-number">7</div>
+                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-7" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-7')">
+                        <input type="file" id="cameraInput-landlord-7" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-7')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-7').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-7').click()">📸 카메라</button>
+                        </div>
+                        <div class="upload-progress hidden" id="progress-landlord-7">
+                            <div class="upload-progress-bar"></div>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-7">
+                            <div class="carousel-track" id="carousel-landlord-7"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-7')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-7')">›</button>
+                            <div class="image-counter" id="counter-landlord-7">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">누수 확인</div>
+                    <div class="card-description">화장실 및 배관 누수 여부 점검</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 임차인 협의사항 -->
+        <div class="section tenant-section">
+            <div class="section-title">👤 임차인 협의사항 (2개 항목)</div>
+            
+            <div class="cards-grid">
+                <div class="card" data-card-id="tenant-1">
+                    <div class="card-header">
+                        <div class="card-number">1</div>
+                        <div class="stars">⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-tenant-1" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'tenant-1')">
+                        <input type="file" id="cameraInput-tenant-1" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'tenant-1')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-tenant-1').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-tenant-1').click()">📸 카메라</button>
+                        </div>
+                        <div class="upload-progress hidden" id="progress-tenant-1">
+                            <div class="upload-progress-bar"></div>
+                        </div>
+                        <div class="carousel-container" id="container-tenant-1">
+                            <div class="carousel-track" id="carousel-tenant-1"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('tenant-1')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('tenant-1')">›</button>
+                            <div class="image-counter" id="counter-tenant-1">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">카페 바테이블 처리</div>
+                    <div class="card-description">전임차인이 설치한 카페 바테이블 철거 조건 협의</div>
+                </div>
+                
+                <div class="card" data-card-id="tenant-2">
+                    <div class="card-header">
+                        <div class="card-number">2</div>
+                        <div class="stars">⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-tenant-2" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'tenant-2')">
+                        <input type="file" id="cameraInput-tenant-2" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'tenant-2')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-tenant-2').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-tenant-2').click()">📸 카메라</button>
+                        </div>
+                        <div class="upload-progress hidden" id="progress-tenant-2">
+                            <div class="upload-progress-bar"></div>
+                        </div>
+                        <div class="carousel-container" id="container-tenant-2">
+                            <div class="carousel-track" id="carousel-tenant-2"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('tenant-2')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('tenant-2')">›</button>
+                            <div class="image-counter" id="counter-tenant-2">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">기타 시설물</div>
+                    <div class="card-description">기타 임차인 관련 시설물 점검</div>
                 </div>
             </div>
         </div>
         
         <div class="summary">
             <h2>📋 점검 요약</h2>
-            <p>총 3개 항목 (Firebase Storage 테스트 버전)</p>
-            <p><strong>별표별 분류:</strong> ⭐⭐⭐⭐⭐(2개) > ⭐⭐(1개)</p>
+            <p>총 9개 항목 | 임대인 협의 7개 | 임차인 협의 2개</p>
+            <p><strong>별표별 분류:</strong> ⭐⭐⭐⭐⭐(5개) > ⭐⭐⭐⭐(1개) > ⭐⭐⭐(2개) > ⭐⭐(1개)</p>
         </div>
     </div>
 
