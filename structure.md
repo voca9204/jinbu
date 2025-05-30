@@ -124,3 +124,33 @@ jinbu/
 - **🛡️ 코드 간소화**: 기존 대비 50% 감소, 버그 0개 달성
 
 **현재 최신 버전: Firebase Only v3.0.1 (CSS: v20251201-003, JS: v20251201-001)**
+
+## 🚀 GitHub Repository 정보 (2025-05-31 업로드 완료)
+
+### 📂 **GitHub Repository**
+- **Repository URL**: https://github.com/voca9204/jinbu.git
+- **최신 Commit**: 60ae523 - Firebase Only v3.0.1 완성 + 배포 완료
+- **업로드 날짜**: 2025-05-31
+- **상태**: ✅ **성공적으로 업로드 완료**
+
+### 📊 **업로드된 변경사항**
+- **21개 파일 변경**: 신규 추가, 수정, 삭제
+- **주요 신규 파일**:
+  - `index-firebase-only.html` (143줄) - 메인 Firebase Only 버전
+  - `scripts/firebase-only.js` (672줄) - Firebase Only 로직
+  - `styles/main.css` (633줄) - 분리된 스타일시트
+  - `structure.md` - 프로젝트 구조 문서
+  - `firestore.rules`, `storage.rules` - Firebase 보안 규칙
+- **정리된 파일**: 이전 버전 HTML 파일들 (10개 파일 삭제)
+
+### 🌐 **배포 현황**
+- **Firebase Hosting**: https://personal-564df.web.app ✅ **운영 중**
+- **GitHub Repository**: https://github.com/voca9204/jinbu.git ✅ **업로드 완료**
+- **GitHub Pages**: 설정 가능 (선택사항)
+
+### 🔄 **버전 관리**
+- **Git Branch**: main
+- **Commit History**: 체계적인 버전 관리 완료
+- **Future Updates**: 향후 업데이트는 동일 repository에서 관리
+
+**🎯 GitHub + Firebase 이중 배포로 안정적인 서비스 운영 체계 완성**
