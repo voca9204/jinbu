@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부암동 건축 점검 보고서 - Firebase + LocalStorage 하이브리드</title>
+    
+    <!-- Firebase v11.6.0 최신 Modular SDK -->
+    <script type="module">
+        // Firebase v11.6.0 Modular API 불러오기
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js';
+        import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
+        
+        // Firebase 설정 (실제 프로젝트 연결됨)
+        const firebaseConfig = {
+            apiKey: "AIzaSyACCbVD7LT2istfACwJhthp7dYWbTutgz4",
+            authDomain: "personal-564df.firebaseapp.com",
+            projectId: "personal-564df",
+            storageBucket: "personal-564df.firebasestorage.app",
+            messagingSenderId: "1016556488732",
+            appId: "1:1016556488732:web:06bf11f1be63a4242d77d9",
+            
+            // Firebase 활성화
+            disabled: false // 실제 Firebase 프로젝트 연결됨
+        };
+
+        // Firebase 초기화 (조건부)
+        let firebaseEnabled = false;
+        
+        if (!firebaseConfig.disabled && firebaseConfig.apiKey !== "AIzaSyDQGQGQGQGQGQGQGQGQGQGQGQGQGQGQG") {
+            try {
+                const app = initializeApp(firebaseConfig);
+                const storage = getStorage(app);
+                const firestore = getFirestore(app);
+
+                // 전역에서 사용할 수 있도록 설정
+                window.firebaseStorage = storage;
+                window.firebaseFirestore = firestore;
+                window.firebaseModules = {
+                    ref, uploadBytes, getDownloadURL, deleteObject,
+                    collection, addDoc, doc, deleteDoc, serverTimestamp,
+                    getDocs, query, orderBy
+                };
+                
+                firebaseEnabled = true;
+                console.log("🔥 Firebase v11.6.0 초기화 완료 (하이브리드 모드)");
+            } catch (error) {
+                console.warn("⚠️ Firebase 초기화 실패, 로컬 전용 모드로 전환:", error.message);
+                firebaseEnabled = false;
+            }
+        } else {
+            console.log("📱 로컬 전용 모드 (Firebase 비활성화)");
+            firebaseEnabled = false;
+        }
+        
+        // Firebase 상태를 전역에 저장
+        window.firebaseEnabled = firebaseEnabled;
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .landlord-section .section-title {
+            background: linear-gradient(135deg, #3742fa, #2f3542);
+        }
+        
+        .tenant-section .section-title {
+            background: linear-gradient(135deg, #5f27cd, #341f97);
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-number {
+            background: #007bff;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .stars {
+            font-size: 18px;
+            color: #ffd700;
+        }
+        
+        .image-gallery {
+            margin-bottom: 15px;
+        }
+        
+        .image-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn-success:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #138496;
+        }
+        
+        .local-only-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 193, 7, 0.9);
+            color: #856404;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 10;
+            border: 1px solid #ffc107;
+        }
+        
+        .firebase-synced-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 10;
+            border: 1px solid #28a745;
+        }
+        
+        .version-info {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #ff4444;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: monospace;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border: 2px solid #fff;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-height: 200px;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #f8f9fa;
+            display: none;
+        }
+        
+        .carousel-track {
+            display: flex;
+            transition: transform 0.3s ease;
+        }
+        
+        .carousel-slide {
+            min-width: 100%;
+            position: relative;
+        }
+        
+        .carousel-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: none;
+        }
+        
+        .carousel-nav.prev {
+            left: 10px;
+        }
+        
+        .carousel-nav.next {
+            right: 10px;
+        }
+        
+        .carousel-container:hover .carousel-nav {
+            display: block;
+        }
+        
+        .image-delete {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .image-counter {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .card-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .summary {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .data-controls {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .data-controls h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .data-controls .btn {
+            margin: 5px;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        /* Lightbox 스타일 */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            cursor: pointer;
+        }
+        
+        .lightbox.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            cursor: default;
+        }
+        
+        .lightbox-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lightbox-close:hover {
+            background: white;
+        }
+        
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lightbox-nav:hover {
+            background: white;
+        }
+        
+        .lightbox-nav.prev {
+            left: -60px;
+        }
+        
+        .lightbox-nav.next {
+            right: -60px;
+        }
+        
+        .lightbox-info {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            color: white;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .carousel-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .carousel-image:hover {
+            transform: scale(1.02);
+        }
+        
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .image-controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>부암동 건축 점검 보고서</h1>
+        
+        <!-- 데이터 관리 컨트롤 -->
+        <div class="data-controls">
+            <h3>📱 데이터 관리 (하이브리드 모드)</h3>
+            <div style="margin-bottom: 15px;">
+                <div id="firebase-status" style="padding: 8px; border-radius: 4px; background: #e8f5e8; color: #2d5016; font-weight: bold;">
+                    🔄 Firebase 연결 중...
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="exportData()">💾 데이터 백업</button>
+            <button class="btn btn-primary" onclick="importData()">📥 데이터 복원</button>
+            <button class="btn btn-success" onclick="uploadLocalDataToFirebase()" id="upload-local-btn">☁️ 로컬 데이터 클라우드 업로드</button>
+            <button class="btn btn-warning" onclick="cleanupDuplicates()" id="cleanup-duplicates-btn">🧹 중복 이미지 정리</button>
+            <button class="btn btn-warning" onclick="cleanupDuplicates()">🧹 중복 이미지 정리</button>
+            <button class="btn btn-info" onclick="debugImageData()">🔍 데이터 상태 확인</button>
+            <button class="btn btn-danger" onclick="clearAllData()">🗑️ 모든 데이터 삭제</button>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                * 사진은 브라우저(LocalStorage) + Firebase Storage에 이중 저장됩니다.<br>
+                * 오프라인에서도 작동하며, 온라인시 자동으로 클라우드 백업됩니다.
+            </div>
+        </div>
+        
+        <!-- 임대인 협의사항 -->
+        <div class="section landlord-section">
+            <div class="section-title">🏠 임대인 협의사항 (13개 항목)</div>
+            
+            <div class="cards-grid">
+                <!-- 별표 5개: ⭐⭐⭐⭐⭐ -->
+                <div class="card" data-card-id="landlord-1">
+                    <div class="card-header">
+                        <div class="card-number">1</div>
+                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-1" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-1')">
+                        <input type="file" id="cameraInput-landlord-1" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-1')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-1').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-1').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-1">
+                            <div class="carousel-track" id="carousel-landlord-1"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-1')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-1')">›</button>
+                            <div class="image-counter" id="counter-landlord-1">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">건물외벽 곰팡이 청소</div>
+                    <div class="card-description">건물 외벽에 발생한 곰팡이로 인한 건강 및 구조적 위험</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-2">
+                    <div class="card-header">
+                        <div class="card-number">2</div>
+                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-2" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-2')">
+                        <input type="file" id="cameraInput-landlord-2" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-2')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-2').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-2').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-2">
+                            <div class="carousel-track" id="carousel-landlord-2">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-2')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-2')">›</button>
+                            <div class="image-counter" id="counter-landlord-2">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">계단 난간 손잡이 설치</div>
+                    <div class="card-description">계단 안전을 위한 난간 손잡이 보수 및 설치</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-3">
+                    <div class="card-header">
+                        <div class="card-number">3</div>
+                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-3" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-3')">
+                        <input type="file" id="cameraInput-landlord-3" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-3')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-3').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-3').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-3">
+                            <div class="carousel-track" id="carousel-landlord-3">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-3')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-3')">›</button>
+                            <div class="image-counter" id="counter-landlord-3">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">2층 화장실 천장 누수</div>
+                    <div class="card-description">2층 화장실 천장 누수 확인 및 방수 보수</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-4">
+                    <div class="card-header">
+                        <div class="card-number">4</div>
+                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-4" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-4')">
+                        <input type="file" id="cameraInput-landlord-4" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-4')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-4').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-4').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-4">
+                            <div class="carousel-track" id="carousel-landlord-4">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-4')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-4')">›</button>
+                            <div class="image-counter" id="counter-landlord-4">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">1층 바닥 보수</div>
+                    <div class="card-description">1층 바닥의 심각한 파손 부분 긴급 보수</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-5">
+                    <div class="card-header">
+                        <div class="card-number">5</div>
+                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-5" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-5')">
+                        <input type="file" id="cameraInput-landlord-5" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-5')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-5').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-5').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-5">
+                            <div class="carousel-track" id="carousel-landlord-5">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-5')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-5')">›</button>
+                            <div class="image-counter" id="counter-landlord-5">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">2층 바닥 보수</div>
+                    <div class="card-description">2층 바닥 균열 및 손상 부분 보수</div>
+                </div>
+                
+                <!-- 별표 4개: ⭐⭐⭐⭐ -->
+                <div class="card" data-card-id="landlord-6">
+                    <div class="card-header">
+                        <div class="card-number">6</div>
+                        <div class="stars">⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-6" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-6')">
+                        <input type="file" id="cameraInput-landlord-6" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-6')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-6').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-6').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-6">
+                            <div class="carousel-track" id="carousel-landlord-6">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-6')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-6')">›</button>
+                            <div class="image-counter" id="counter-landlord-6">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">4층 화장실 바닥 누수</div>
+                    <div class="card-description">4층 화장실 바닥 누수 확인 및 보수</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-7">
+                    <div class="card-header">
+                        <div class="card-number">7</div>
+                        <div class="stars">⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-7" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-7')">
+                        <input type="file" id="cameraInput-landlord-7" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-7')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-7').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-7').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-7">
+                            <div class="carousel-track" id="carousel-landlord-7"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-7')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-7')">›</button>
+                            <div class="image-counter" id="counter-landlord-7">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">조경 정리</div>
+                    <div class="card-description">건물 주변 조경 정리 및 환경 개선 작업</div>
+                </div>
+                
+                <!-- 별표 3개: ⭐⭐⭐ -->
+                <div class="card" data-card-id="landlord-8">
+                    <div class="card-header">
+                        <div class="card-number">8</div>
+                        <div class="stars">⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-8" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-8')">
+                        <input type="file" id="cameraInput-landlord-8" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-8')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-8').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-8').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-8">
+                            <div class="carousel-track" id="carousel-landlord-8">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-8')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-8')">›</button>
+                            <div class="image-counter" id="counter-landlord-8">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">2층 폴딩도어 유격1</div>
+                    <div class="card-description">2층 폴딩도어의 유격 조정 및 보수</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-9">
+                    <div class="card-header">
+                        <div class="card-number">9</div>
+                        <div class="stars">⭐⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-9" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-9')">
+                        <input type="file" id="cameraInput-landlord-9" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-9')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-9').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-9').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-9">
+                            <div class="carousel-track" id="carousel-landlord-9">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-9')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-9')">›</button>
+                            <div class="image-counter" id="counter-landlord-9">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">2층 폴딩도어 유격2</div>
+                    <div class="card-description">2층 폴딩도어의 추가 유격 문제 해결</div>
+                </div>
+                
+                <!-- 별표 2개: ⭐⭐ -->
+                <div class="card" data-card-id="landlord-10">
+                    <div class="card-header">
+                        <div class="card-number">10</div>
+                        <div class="stars">⭐⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-10" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-10')">
+                        <input type="file" id="cameraInput-landlord-10" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-10')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-10').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-10').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-10">
+                            <div class="carousel-track" id="carousel-landlord-10"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-10')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-10')">›</button>
+                            <div class="image-counter" id="counter-landlord-10">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">건물 외부 조명 점검</div>
+                    <div class="card-description">건물 외부 조명 시설 점검 및 교체</div>
+                </div>
+                
+                <!-- 별표 1개: ⭐ -->
+                <div class="card" data-card-id="landlord-11">
+                    <div class="card-header">
+                        <div class="card-number">11</div>
+                        <div class="stars">⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-11" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-11')">
+                        <input type="file" id="cameraInput-landlord-11" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-11')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-11').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-11').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-11">
+                            <div class="carousel-track" id="carousel-landlord-11">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-11')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-11')">›</button>
+                            <div class="image-counter" id="counter-landlord-11">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">스위치 점검</div>
+                    <div class="card-description">전기 스위치 작동 상태 점검 및 교체</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-12">
+                    <div class="card-header">
+                        <div class="card-number">12</div>
+                        <div class="stars">⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-12" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-12')">
+                        <input type="file" id="cameraInput-landlord-12" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-12')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-12').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-12').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-12">
+                            <div class="carousel-track" id="carousel-landlord-12">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-12')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-12')">›</button>
+                            <div class="image-counter" id="counter-landlord-12">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">통신함 커버</div>
+                    <div class="card-description">통신함 커버 보수 및 교체</div>
+                </div>
+                
+                <div class="card" data-card-id="landlord-13">
+                    <div class="card-header">
+                        <div class="card-number">13</div>
+                        <div class="stars">⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-landlord-13" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'landlord-13')">
+                        <input type="file" id="cameraInput-landlord-13" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'landlord-13')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-landlord-13').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-landlord-13').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-landlord-13">
+                            <div class="carousel-track" id="carousel-landlord-13">
+                            </div>
+                            <button class="carousel-nav prev" onclick="prevImage('landlord-13')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('landlord-13')">›</button>
+                            <div class="image-counter" id="counter-landlord-13">1/1</div>
+                        </div>
+                    </div>
+                    <div class="card-title">계단 손잡이 보수</div>
+                    <div class="card-description">기존 계단 손잡이 부식 확인 및 보수</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 전임차인 협의사항 -->
+        <div class="section tenant-section">
+            <div class="section-title">👤 전임차인 협의사항 (1개 항목)</div>
+            
+            <div class="cards-grid">
+                <div class="card" data-card-id="tenant-1">
+                    <div class="card-header">
+                        <div class="card-number">1</div>
+                        <div class="stars">⭐</div>
+                    </div>
+                    <div class="image-gallery">
+                        <input type="file" id="fileInput-tenant-1" class="hidden" accept="image/*" multiple onchange="handleFileUpload(event, 'tenant-1')">
+                        <input type="file" id="cameraInput-tenant-1" class="hidden" accept="image/*" capture="environment" onchange="handleFileUpload(event, 'tenant-1')">
+                        <div class="image-controls">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-tenant-1').click()">📷 사진 추가</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('cameraInput-tenant-1').click()">📸 카메라</button>
+                        </div>
+                        <div class="carousel-container" id="container-tenant-1">
+                            <div class="carousel-track" id="carousel-tenant-1"></div>
+                            <button class="carousel-nav prev" onclick="prevImage('tenant-1')">‹</button>
+                            <button class="carousel-nav next" onclick="nextImage('tenant-1')">›</button>
+                            <div class="image-counter" id="counter-tenant-1">0/0</div>
+                        </div>
+                    </div>
+                    <div class="card-title">카페 바테이블 처리</div>
+                    <div class="card-description">전임차인이 설치한 카페 바테이블 철거 조건 협의</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="summary">
+            <h2>📋 점검 요약</h2>
+            <p>총 14개 항목 | 임대인 협의 13개 | 전임차인 협의 1개</p>
+            <p><strong>별표별 분류:</strong> ⭐⭐⭐⭐⭐(5개) > ⭐⭐⭐⭐(2개) > ⭐⭐⭐(2개) > ⭐⭐(1개) > ⭐(4개)</p>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <button class="lightbox-close" onclick="closeLightbox()">×</button>
+            <button class="lightbox-nav prev" onclick="prevLightboxImage()">‹</button>
+            <button class="lightbox-nav next" onclick="nextLightboxImage()">›</button>
+            <img class="lightbox-image" id="lightbox-image" src="" alt="">
+            <div class="lightbox-info" id="lightbox-info"></div>
+        </div>
+    </div>
+
+    <script>
+        // 이미지 관리 객체 - localStorage와 동기화
+        let imageData = {};
+        
+        // LocalStorage 키
+        const STORAGE_KEY = 'jinbu-image-data';
+        
+        // Lightbox 관련 변수
+        let currentLightboxCardId = null;
+        let currentLightboxIndex = 0;
+        
+        // 페이지 로드 시 데이터 복원
+        function loadDataFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    imageData = JSON.parse(stored);
+                    console.log('데이터 복원됨:', imageData);
+                    
+                    // 파일명 마이그레이션 (옛 파일명 → 새 파일명)
+                    let needsUpdate = false;
+                    Object.keys(imageData).forEach(cardId => {
+                        if (imageData[cardId]) {
+                            imageData[cardId].forEach(img => {
+                                if (img.src) {
+                                    const oldSrc = img.src;
+                                    // 파일명 변경 매핑
+                                    img.src = img.src.replace('01_스위치.jpg', '01_switch.jpg');
+                                    img.src = img.src.replace('02_통신함커버.jpg', '02_communication.jpg');
+                                    
+                                    if (oldSrc !== img.src) {
+                                        console.log('파일명 마이그레이션:', oldSrc, '→', img.src);
+                                        needsUpdate = true;
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    
+                    // 마이그레이션이 발생했으면 저장
+                    if (needsUpdate) {
+                        saveDataToStorage();
+                        console.log('파일명 마이그레이션 완료');
+                    }
+                    
+                    // 모든 카드의 이미지 표시
+                    Object.keys(imageData).forEach(cardId => {
+                        updateCarousel(cardId);
+                    });
+                }
+            } catch (error) {
+                console.error('데이터 복원 실패:', error);
+                imageData = {};
+            }
+        }
+        
+        // Firebase에서 데이터 불러오기 (중복 방지 강화)
+        async function loadDataFromFirebase() {
+            if (!window.firebaseFirestore) {
+                console.log('Firebase가 초기화되지 않아 건너뜀');
+                return false;
+            }
+            
+            try {
+                const { collection, getDocs, query, orderBy } = window.firebaseModules;
+                const firestore = window.firebaseFirestore;
+                
+                console.log('🔥 Firebase에서 이미지 데이터 불러오는 중...');
+                updateFirebaseStatus('📥 Firebase에서 데이터 불러오는 중...');
+                
+                // Firestore에서 모든 이미지 메타데이터 가져오기
+                const imagesCollection = collection(firestore, 'images');
+                const q = query(imagesCollection, orderBy('uploadTime', 'asc'));
+                const querySnapshot = await getDocs(q);
+                
+                const firebaseData = {};
+                let imageCount = 0;
+                const processedUrls = new Set(); // 중복 방지용 URL 추적
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const cardId = data.cardId;
+                    const firebaseUrl = data.url;
+                    
+                    // 이미 처리된 URL인지 확인 (Firebase 레벨에서 중복 방지)
+                    if (processedUrls.has(firebaseUrl)) {
+                        console.log(`Firebase 중복 URL 건너뜀: ${firebaseUrl}`);
+                        return;
+                    }
+                    processedUrls.add(firebaseUrl);
+                    
+                    if (!firebaseData[cardId]) {
+                        firebaseData[cardId] = [];
+                    }
+                    
+                    const imageInfo = {
+                        src: firebaseUrl, // Firebase Storage URL 사용
+                        firebaseUrl: firebaseUrl,
+                        firebaseId: data.fileName,
+                        docId: doc.id,
+                        name: data.originalName || data.fileName,
+                        timestamp: data.uploadTime?.toDate?.()?.toISOString() || new Date().toISOString(),
+                        isLocal: false // Firebase에서 온 데이터 표시
+                    };
+                    
+                    firebaseData[cardId].push(imageInfo);
+                    imageCount++;
+                });
+                
+                if (imageCount > 0) {
+                    console.log(`🔥 Firebase에서 ${imageCount}개 고유 이미지 불러옴:`, firebaseData);
+                    
+                    // 기존 LocalStorage 데이터와 병합 (완전한 중복 제거)
+                    const currentLocalCount = Object.values(imageData).reduce((total, arr) => total + arr.length, 0);
+                    
+                    if (currentLocalCount === 0) {
+                        // LocalStorage가 비어있으면 Firebase 데이터로 대체
+                        imageData = { ...firebaseData };
+                        console.log('LocalStorage가 비어있어 Firebase 데이터로 교체');
+                    } else {
+                        // 기존 데이터와 병합 (완전한 중복 체크)
+                        Object.keys(firebaseData).forEach(cardId => {
+                            if (!imageData[cardId]) {
+                                imageData[cardId] = [];
+                            }
+                            
+                            // Firebase 이미지가 LocalStorage에 없으면 추가 (완전한 중복 체크)
+                            firebaseData[cardId].forEach(firebaseImage => {
+                                const exists = imageData[cardId].some(localImage => {
+                                    // 완전한 중복 체크 (다중 기준)
+                                    return (
+                                        // Firebase URL로 체크
+                                        localImage.firebaseUrl === firebaseImage.firebaseUrl ||
+                                        localImage.src === firebaseImage.firebaseUrl ||
+                                        // Firebase ID로 체크
+                                        (localImage.firebaseId && localImage.firebaseId === firebaseImage.firebaseId) ||
+                                        // 파일명 + URL 조합으로 체크
+                                        (localImage.name === firebaseImage.name && localImage.src === firebaseImage.src) ||
+                                        // docId로 체크 (Firestore 문서 ID)
+                                        (localImage.docId && localImage.docId === firebaseImage.docId)
+                                    );
+                                });
+                                
+                                if (!exists) {
+                                    imageData[cardId].push(firebaseImage);
+                                    console.log(`✅ Firebase 이미지 추가: ${cardId} - ${firebaseImage.name}`);
+                                } else {
+                                    console.log(`🚫 중복 이미지 건너뜀: ${cardId} - ${firebaseImage.name}`);
+                                }
+                            });
+                        });
+                        
+                        // 추가 중복 이미지 정리 (안전장치)
+                        const removedCount = removeDuplicateImages();
+                    }
+                    
+                    // LocalStorage에 저장
+                    saveDataToStorage();
+                    
+                    // UI 업데이트
+                    Object.keys(imageData).forEach(cardId => {
+                        updateCarousel(cardId);
+                    });
+                    
+                    updateFirebaseStatus(`✅ Firebase에서 ${imageCount}개 이미지 불러옴`);
+                    return true;
+                } else {
+                    console.log('Firebase에 저장된 이미지가 없음');
+                    updateFirebaseStatus('ℹ️ Firebase에 이미지 없음');
+                    return false;
+                }
+                
+            } catch (error) {
+                console.error('Firebase 데이터 불러오기 실패:', error);
+                updateFirebaseStatus('❌ Firebase 데이터 불러오기 실패', true);
+                return false;
+            }
+        }
+        
+        // 중복 이미지 정리 함수 (강화된 버전)
+        function removeDuplicateImages() {
+            let removedCount = 0;
+            
+            Object.keys(imageData).forEach(cardId => {
+                if (!imageData[cardId] || imageData[cardId].length <= 1) return;
+                
+                const uniqueImages = [];
+                const seenIds = new Set();
+                const seenUrls = new Set();
+                const seenHashes = new Set();
+                const seenDocIds = new Set();
+                
+                imageData[cardId].forEach((image, index) => {
+                    // 고유성 체크 기준들 (완전한 중복 방지)
+                    const firebaseIdCheck = image.firebaseId && seenIds.has(image.firebaseId);
+                    const firebaseUrlCheck = image.firebaseUrl && seenUrls.has(image.firebaseUrl);
+                    const srcUrlCheck = image.src && seenUrls.has(image.src);
+                    const docIdCheck = image.docId && seenDocIds.has(image.docId);
+                    const hashCheck = seenHashes.has(image.src + '|' + image.name + '|' + (image.timestamp || ''));
+                    
+                    const isDuplicate = firebaseIdCheck || firebaseUrlCheck || srcUrlCheck || docIdCheck || hashCheck;
+                    
+                    if (!isDuplicate) {
+                        uniqueImages.push(image);
+                        if (image.firebaseId) seenIds.add(image.firebaseId);
+                        if (image.firebaseUrl) seenUrls.add(image.firebaseUrl);
+                        if (image.src) seenUrls.add(image.src);
+                        if (image.docId) seenDocIds.add(image.docId);
+                        seenHashes.add(image.src + '|' + image.name + '|' + (image.timestamp || ''));
+                    } else {
+                        removedCount++;
+                        console.log(`🧹 중복 이미지 제거: ${cardId}[${index}] - ${image.name}`);
+                        console.log(`  ├─ FirebaseId: ${image.firebaseId}, URL: ${image.firebaseUrl}`);
+                        console.log(`  └─ 중복 원인: ${firebaseIdCheck ? 'ID중복 ' : ''}${firebaseUrlCheck ? 'URL중복 ' : ''}${docIdCheck ? 'DocID중복 ' : ''}${hashCheck ? 'Hash중복' : ''}`);
+                    }
+                });
+                
+                if (uniqueImages.length !== imageData[cardId].length) {
+                    imageData[cardId] = uniqueImages;
+                    console.log(`✅ ${cardId}: ${imageData[cardId].length}개 → ${uniqueImages.length}개 (${imageData[cardId].length - uniqueImages.length}개 제거)`);
+                }
+            });
+            
+            if (removedCount > 0) {
+                console.log(`🧹 총 ${removedCount}개 중복 이미지 정리 완료`);
+                updateFirebaseStatus(`🧹 ${removedCount}개 중복 이미지 정리됨`);
+                return removedCount;
+            }
+            
+            return 0;
+        }
+        
+        // 수동 중복 정리 실행
+        function cleanupDuplicates() {
+            const confirmed = confirm('중복된 이미지들을 정리하시겠습니까?\n\n동일한 이미지가 여러 개 있는 경우 하나만 남기고 나머지는 제거됩니다.');
+            
+            if (confirmed) {
+                updateFirebaseStatus('🧹 중복 이미지 정리 중...');
+                
+                const removedCount = removeDuplicateImages();
+                
+                if (removedCount > 0) {
+                    // LocalStorage 업데이트
+                    saveDataToStorage();
+                    
+                    // UI 새로고침
+                    Object.keys(imageData).forEach(cardId => {
+                        updateCarousel(cardId);
+                    });
+                    
+                    updateFirebaseStatus(`✅ ${removedCount}개 중복 이미지가 정리되었습니다!`);
+                    alert(`${removedCount}개의 중복 이미지가 정리되었습니다.`);
+                } else {
+                    updateFirebaseStatus('✅ 중복 이미지가 없습니다');
+                    alert('중복된 이미지가 발견되지 않았습니다.');
+                }
+            }
+        }
+        
+        // 이미지 데이터 상태 디버깅
+        function debugImageData() {
+            console.log('=== 이미지 데이터 상태 디버깅 ===');
+            
+            let totalImages = 0;
+            let duplicateCount = 0;
+            let firebaseImages = 0;
+            let localOnlyImages = 0;
+            const analysis = {};
+            
+            Object.keys(imageData).forEach(cardId => {
+                const images = imageData[cardId] || [];
+                const cardAnalysis = {
+                    count: images.length,
+                    firebase: 0,
+                    localOnly: 0,
+                    duplicates: [],
+                    firebaseIds: [],
+                    firebaseUrls: [],
+                    names: []
+                };
+                
+                const seenIds = new Set();
+                const seenUrls = new Set();
+                const seenNames = new Set();
+                
+                images.forEach((image, index) => {
+                    totalImages++;
+                    
+                    // Firebase 상태 체크
+                    if (image.firebaseId && image.firebaseUrl) {
+                        firebaseImages++;
+                        cardAnalysis.firebase++;
+                    } else {
+                        localOnlyImages++;
+                        cardAnalysis.localOnly++;
+                    }
+                    
+                    // 중복 체크
+                    if (image.firebaseId) {
+                        if (seenIds.has(image.firebaseId)) {
+                            duplicateCount++;
+                            cardAnalysis.duplicates.push(`${index}: ID 중복 - ${image.firebaseId}`);
+                        }
+                        seenIds.add(image.firebaseId);
+                        cardAnalysis.firebaseIds.push(image.firebaseId);
+                    }
+                    
+                    if (image.firebaseUrl) {
+                        if (seenUrls.has(image.firebaseUrl)) {
+                            duplicateCount++;
+                            cardAnalysis.duplicates.push(`${index}: URL 중복 - ${image.firebaseUrl}`);
+                        }
+                        seenUrls.add(image.firebaseUrl);
+                        cardAnalysis.firebaseUrls.push(image.firebaseUrl);
+                    }
+                    
+                    if (image.name) {
+                        if (seenNames.has(image.name)) {
+                            cardAnalysis.duplicates.push(`${index}: 이름 중복 - ${image.name}`);
+                        }
+                        seenNames.add(image.name);
+                        cardAnalysis.names.push(image.name);
+                    }
+                });
+                
+                analysis[cardId] = cardAnalysis;
+            });
+            
+            // 콘솔에 상세 리포트 출력
+            console.log(`총 이미지: ${totalImages}개`);
+            console.log(`Firebase 동기화: ${firebaseImages}개`);
+            console.log(`로컬 전용: ${localOnlyImages}개`);
+            console.log(`중복 감지: ${duplicateCount}개`);
+            console.log('카드별 상세 분석:', analysis);
+            
+            // 중복이 있는 카드만 별도 출력
+            Object.keys(analysis).forEach(cardId => {
+                const card = analysis[cardId];
+                if (card.duplicates.length > 0) {
+                    console.warn(`⚠️ ${cardId} 카드에서 중복 발견:`, card.duplicates);
+                }
+                if (card.count > 1) {
+                    console.log(`📊 ${cardId}: ${card.count}개 이미지 (Firebase: ${card.firebase}, 로컬: ${card.localOnly})`);
+                }
+            });
+            
+            // 사용자에게 알림
+            const message = `디버깅 완료!\n\n총 이미지: ${totalImages}개\nFirebase 동기화: ${firebaseImages}개\n로컬 전용: ${localOnlyImages}개\n중복 감지: ${duplicateCount}개\n\n자세한 내용은 Console(F12)을 확인하세요.`;
+            
+            alert(message);
+            
+            updateFirebaseStatus(`🔍 디버깅 완료: 총 ${totalImages}개 이미지, ${duplicateCount}개 중복 감지`);
+        }
+        
+        // LocalStorage 용량 체크 함수
+        function checkStorageQuota() {
+            try {
+                const testKey = 'storage-test';
+                const testData = new Array(1024 * 1024).join('a'); // 1MB 테스트
+                localStorage.setItem(testKey, testData);
+                localStorage.removeItem(testKey);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // 데이터를 localStorage에 저장 (개선된 버전)
+        function saveDataToStorage() {
+            try {
+                // 현재 데이터 크기 계산
+                const dataString = JSON.stringify(imageData);
+                const sizeInMB = (dataString.length / 1024 / 1024).toFixed(2);
+                console.log(`데이터 크기: ${sizeInMB}MB`);
+                
+                // 5MB 이상이면 경고
+                if (sizeInMB > 5) {
+                    console.warn('⚠️ 데이터 크기가 5MB를 초과했습니다. 일부 이미지를 삭제하는 것을 권장합니다.');
+                    updateFirebaseStatus(`⚠️ 로컬 데이터 크기: ${sizeInMB}MB (권장: 5MB 이하)`, true);
+                }
+                
+                localStorage.setItem(STORAGE_KEY, dataString);
+                console.log('데이터 저장됨');
+            } catch (error) {
+                console.error('데이터 저장 실패:', error);
+                
+                if (error.name === 'QuotaExceededError') {
+                    // 용량 초과시 사용자에게 알림
+                    alert('💾 저장 공간이 부족합니다!\n\n해결 방법:\n1. 일부 이미지를 삭제하세요\n2. 브라우저 캐시를 정리하세요\n3. 데이터 백업 후 "모든 데이터 삭제"를 실행하세요');
+                    updateFirebaseStatus('❌ LocalStorage 용량 초과 - 이미지 삭제 필요', true);
+                    
+                    // 용량 초과시 마지막 추가된 이미지들 제거 시도
+                    if (confirm('자동으로 최근 추가된 이미지들을 제거하시겠습니까?')) {
+                        autoCleanupImages();
+                    }
+                } else {
+                    updateFirebaseStatus('❌ 데이터 저장 실패', true);
+                    alert('데이터 저장에 실패했습니다. 브라우저 저장 공간이 부족할 수 있습니다.');
+                }
+            }
+        }
+
+        // 자동 정리 함수
+        function autoCleanupImages() {
+            try {
+                let cleaned = false;
+                
+                // 각 카드에서 가장 최근 이미지 제거
+                for (const cardId in imageData) {
+                    if (imageData[cardId] && imageData[cardId].length > 1) {
+                        imageData[cardId].pop(); // 마지막 이미지 제거
+                        updateCarousel(cardId);
+                        cleaned = true;
+                    }
+                }
+                
+                if (cleaned) {
+                    saveDataToStorage(); // 재시도
+                    alert('일부 이미지가 제거되었습니다.');
+                } else {
+                    alert('제거할 이미지가 없습니다. 수동으로 이미지를 삭제해주세요.');
+                }
+            } catch (error) {
+                console.error('자동 정리 실패:', error);
+            }
+        }
+
+        // 파일 업로드 처리
+        // Firebase 상태 업데이트
+        function updateFirebaseStatus(status, isError = false) {
+            const statusElement = document.getElementById('firebase-status');
+            if (statusElement) {
+                statusElement.textContent = status;
+                statusElement.style.background = isError ? '#ffe8e8' : '#e8f5e8';
+                statusElement.style.color = isError ? '#d63031' : '#2d5016';
+            }
+        }
+
+        // Firebase Storage에 이미지 업로드
+        async function uploadToFirebase(file, cardId) {
+            try {
+                const { ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp } = window.firebaseModules;
+                const storage = window.firebaseStorage;
+                const firestore = window.firebaseFirestore;
+                
+                // 파일명 생성 (고유성을 위해 timestamp 추가)
+                const timestamp = new Date().getTime();
+                const fileName = `${cardId}_${timestamp}_${file.name}`;
+                const storageRef = ref(storage, `jinbu-images/${fileName}`);
+                
+                // Firebase Storage에 업로드
+                console.log('Firebase 업로드 시작:', fileName);
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(storageRef);
+                
+                // Firestore에 메타데이터 저장
+                const imageDoc = {
+                    cardId: cardId,
+                    fileName: file.name,
+                    originalFileName: file.name,
+                    storageFileName: fileName,
+                    downloadURL: downloadURL,
+                    uploadedAt: serverTimestamp(),
+                    fileSize: file.size,
+                    fileType: file.type
+                };
+                
+                const docRef = await addDoc(collection(firestore, 'jinbu-images'), imageDoc);
+                console.log('Firebase 업로드 완료:', downloadURL);
+                
+                return {
+                    firebaseUrl: downloadURL,
+                    firebaseId: fileName,
+                    docId: docRef.id
+                };
+                
+            } catch (error) {
+                console.error('Firebase 업로드 실패:', error);
+                updateFirebaseStatus('❌ Firebase 업로드 실패: ' + error.message, true);
+                return null;
+            }
+        }
+
+        // 이미지 압축 함수 (LocalStorage 용량 최적화)
+        function compressImage(file, maxWidth = 800, quality = 0.7) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = function() {
+                    // 비율 유지하며 리사이즈
+                    const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+                    canvas.width = img.width * ratio;
+                    canvas.height = img.height * ratio;
+                    
+                    // 이미지 그리기
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // 압축된 데이터 URL 반환
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    console.log(`이미지 압축: ${file.name} (원본: ${(file.size/1024).toFixed(1)}KB → 압축: ${(compressedDataUrl.length*0.75/1024).toFixed(1)}KB)`);
+                    resolve(compressedDataUrl);
+                };
+                
+                const reader = new FileReader();
+                reader.onload = (e) => img.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleFileUpload(event, cardId) {
+            console.log('handleFileUpload called for:', cardId);
+            const files = Array.from(event.target.files);
+            console.log('Files selected:', files.length);
+            
+            files.forEach(async (file) => {
+                console.log('Processing file:', file.name);
+                
+                // 1. 이미지 압축 (LocalStorage 용량 최적화)
+                const compressedSrc = await compressImage(file);
+                
+                // 2. 즉시 로컬에 추가 (빠른 응답)
+                console.log('File compressed, adding to carousel');
+                const localImageData = {
+                    src: compressedSrc, // 압축된 이미지 사용
+                    name: file.name,
+                    timestamp: new Date().toISOString(),
+                    isLocal: true,
+                    firebaseUrl: null,
+                    firebaseId: null,
+                    docId: null
+                };
+                addImageToCarousel(cardId, localImageData);
+                
+                // 2. Firebase에 백그라운드 업로드 (활성화되어 있을 때만)
+                if (window.firebaseEnabled) {
+                    try {
+                        updateFirebaseStatus('🔄 Firebase 업로드 중...');
+                        const firebaseData = await uploadToFirebase(file, cardId);
+                        
+                        if (firebaseData && imageData[cardId]) {
+                            // 로컬 데이터에 Firebase 정보 추가
+                            const localImages = imageData[cardId];
+                            const targetImage = localImages.find(img => 
+                                img.name === file.name && img.isLocal && !img.firebaseUrl
+                            );
+                            
+                            if (targetImage) {
+                                targetImage.firebaseUrl = firebaseData.firebaseUrl;
+                                targetImage.firebaseId = firebaseData.firebaseId;
+                                targetImage.docId = firebaseData.docId;
+                                targetImage.isLocal = false; // 이제 Firebase에도 저장됨
+                                console.log('Firebase 데이터 연결 완료:', targetImage);
+                            }
+                            
+                            saveDataToStorage(); // LocalStorage 업데이트
+                            updateFirebaseStatus('✅ Firebase 동기화 완료');
+                        } else {
+                            updateFirebaseStatus('⚠️ Firebase 업로드 실패 (로컬 저장은 완료)', true);
+                        }
+                    } catch (firebaseError) {
+                        console.error('Firebase 업로드 실패:', firebaseError);
+                        
+                        // Firebase 실패 원인별 메시지
+                        let errorMessage = '⚠️ Firebase 업로드 실패: ';
+                        if (firebaseError.code === 'storage/unauthorized') {
+                            errorMessage += '권한 없음 (로컬 저장은 완료)';
+                        } else if (firebaseError.code === 'storage/quota-exceeded') {
+                            errorMessage += '용량 초과 (로컬 저장은 완료)';
+                        } else {
+                            errorMessage += '네트워크 오류 (로컬 저장은 완료)';
+                        }
+                        
+                        updateFirebaseStatus(errorMessage, true);
+                        console.log('🔄 로컬 저장은 정상 작동 중 (오프라인 모드)');
+                    }
+                } else {
+                    updateFirebaseStatus('📱 로컬 전용 모드 (Firebase 비활성화)', false);
+                    console.log('📱 로컬 전용으로 저장 완료');
+                }
+            });
+            
+            // 파일 입력 초기화
+            event.target.value = '';
+        }
+
+        // 카러셀에 이미지 추가 (수정된 버전)
+        function addImageToCarousel(cardId, newImageData) {
+            if (!imageData[cardId]) {
+                imageData[cardId] = [];
+            }
+            
+            imageData[cardId].push(newImageData);
+            
+            updateCarousel(cardId);
+            saveDataToStorage(); // 데이터 저장
+        }
+
+        // 카러셀 업데이트
+        function updateCarousel(cardId) {
+            const carousel = document.getElementById(`carousel-${cardId}`);
+            const container = document.getElementById(`container-${cardId}`);
+            const images = imageData[cardId] || [];
+            
+            if (!carousel || !container) {
+                console.error('Carousel elements not found for:', cardId);
+                return;
+            }
+            
+            carousel.innerHTML = '';
+            
+            images.forEach((image, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'carousel-slide';
+                
+                // 동기화 상태 확인
+                const syncStatus = getImageSyncStatus(image);
+                const statusIcon = syncStatus === 'firebase' 
+                    ? '<div class="firebase-synced-icon">☁️ 동기됨</div>'
+                    : '<div class="local-only-icon">💾 로컬만</div>';
+                
+                slide.innerHTML = `
+                    <img src="${image.src}" alt="${image.name}" class="carousel-image" onclick="openLightbox('${cardId}', ${index})" title="클릭하여 원본 보기">
+                    ${statusIcon}
+                    <button class="image-delete" onclick="deleteImage('${cardId}', ${index})" title="삭제">×</button>
+                `;
+                carousel.appendChild(slide);
+            });
+            
+            // 컨테이너 표시
+            if (images.length > 0) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+            
+            updateImageCounter(cardId);
+        }
+
+        // 이미지 삭제
+        // Firebase에서 이미지 삭제
+        async function deleteFromFirebase(imageInfo) {
+            try {
+                if (!imageInfo.firebaseId || !imageInfo.docId) {
+                    console.log('Firebase 정보가 없어 로컬에서만 삭제');
+                    return true;
+                }
+                
+                const { ref, deleteObject, doc, deleteDoc } = window.firebaseModules;
+                const storage = window.firebaseStorage;
+                const firestore = window.firebaseFirestore;
+                
+                // Firebase Storage에서 삭제
+                const storageRef = ref(storage, `jinbu-images/${imageInfo.firebaseId}`);
+                await deleteObject(storageRef);
+                console.log('Firebase Storage 삭제 완료:', imageInfo.firebaseId);
+                
+                // Firestore에서 삭제
+                await deleteDoc(doc(firestore, 'jinbu-images', imageInfo.docId));
+                console.log('Firestore 문서 삭제 완료:', imageInfo.docId);
+                
+                return true;
+            } catch (error) {
+                console.error('Firebase 삭제 실패:', error);
+                updateFirebaseStatus('⚠️ Firebase 삭제 실패 (로컬에서는 삭제됨)', true);
+                return false;
+            }
+        }
+
+        async function deleteImage(cardId, index) {
+            if (imageData[cardId] && imageData[cardId][index]) {
+                const imageInfo = imageData[cardId][index];
+                const confirmDelete = confirm('이 사진을 삭제하시겠습니까? (로컬 + Firebase에서 모두 삭제됩니다)');
+                
+                if (confirmDelete) {
+                    // 1. Firebase에서 삭제 시도
+                    updateFirebaseStatus('🔄 Firebase 삭제 중...');
+                    await deleteFromFirebase(imageInfo);
+                    
+                    // 2. 로컬에서 삭제
+                    imageData[cardId].splice(index, 1);
+                    updateCarousel(cardId);
+                    saveDataToStorage(); // 데이터 저장
+                    
+                    updateFirebaseStatus('✅ 삭제 완료');
+                }
+            }
+        }
+
+        // 이전 이미지
+        function prevImage(cardId) {
+            const carousel = document.getElementById(`carousel-${cardId}`);
+            const images = imageData[cardId] || [];
+            if (images.length <= 1) return;
+            
+            if (!carousel.dataset.currentIndex) {
+                carousel.dataset.currentIndex = '0';
+            }
+            
+            let currentIndex = parseInt(carousel.dataset.currentIndex);
+            currentIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
+            carousel.dataset.currentIndex = currentIndex.toString();
+            
+            carousel.style.transform = `translateX(-${currentIndex * 100}%)`;
+            updateImageCounter(cardId);
+        }
+
+        // 다음 이미지
+        function nextImage(cardId) {
+            const carousel = document.getElementById(`carousel-${cardId}`);
+            const images = imageData[cardId] || [];
+            if (images.length <= 1) return;
+            
+            if (!carousel.dataset.currentIndex) {
+                carousel.dataset.currentIndex = '0';
+            }
+            
+            let currentIndex = parseInt(carousel.dataset.currentIndex);
+            currentIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
+            carousel.dataset.currentIndex = currentIndex.toString();
+            
+            carousel.style.transform = `translateX(-${currentIndex * 100}%)`;
+            updateImageCounter(cardId);
+        }
+
+        // 이미지 카운터 업데이트
+        function updateImageCounter(cardId) {
+            const counter = document.getElementById(`counter-${cardId}`);
+            const carousel = document.getElementById(`carousel-${cardId}`);
+            const images = imageData[cardId] || [];
+            
+            if (!counter || !carousel) return;
+            
+            if (images.length > 0) {
+                const currentIndex = parseInt(carousel.dataset.currentIndex || '0') + 1;
+                counter.textContent = `${currentIndex}/${images.length}`;
+                counter.style.display = 'block';
+            } else {
+                counter.textContent = '0/0';
+                counter.style.display = 'none';
+            }
+        }
+        
+        // 데이터 백업 (JSON 파일로 다운로드)
+        function exportData() {
+            try {
+                const dataStr = JSON.stringify(imageData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `jinbu-backup-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                alert('데이터가 백업되었습니다.');
+            } catch (error) {
+                console.error('백업 실패:', error);
+                alert('백업에 실패했습니다.');
+            }
+        }
+        
+        // 데이터 복원 버튼 클릭
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        const confirmImport = confirm('기존 데이터를 모두 교체하시겠습니까?');
+                        if (confirmImport) {
+                            imageData = importedData;
+                            saveDataToStorage();
+                            location.reload(); // 페이지 새로고침으로 데이터 적용
+                        }
+                    } catch (error) {
+                        console.error('복원 실패:', error);
+                        alert('잘못된 백업 파일입니다.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+        
+        // 모든 데이터 삭제
+        function clearAllData() {
+            const confirmClear = confirm('모든 사진과 데이터를 삭제하시겠습니까?\n(로컬 저장소만 삭제됩니다. Firebase 데이터는 수동으로 삭제해주세요)\n이 작업은 되돌릴 수 없습니다.');
+            if (confirmClear) {
+                const doubleConfirm = confirm('정말로 모든 로컬 데이터를 삭제하시겠습니까?');
+                if (doubleConfirm) {
+                    imageData = {};
+                    saveDataToStorage();
+                    updateFirebaseStatus('⚠️ 로컬 데이터만 삭제됨 (Firebase 데이터는 유지)', true);
+                    location.reload();
+                }
+            }
+        }
+        
+        // 로컬 데이터를 Firebase에 업로드
+        async function uploadLocalDataToFirebase() {
+            if (!window.firebaseStorage || !window.firebaseFirestore) {
+                alert('Firebase가 연결되지 않았습니다. 네트워크를 확인해주세요.');
+                return;
+            }
+            
+            const uploadBtn = document.getElementById('upload-local-btn');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '🔄 업로드 중...';
+            
+            let uploadCount = 0;
+            let totalTargetImages = 0;
+            let failedImages = 0;
+            
+            // 업로드 대상 이미지 분류
+            const imagesToUpload = [];
+            
+            for (const cardId in imageData) {
+                for (let i = 0; i < imageData[cardId].length; i++) {
+                    const image = imageData[cardId][i];
+                    
+                    // 1순위: firebaseId가 없는 완전한 로컬 전용 이미지
+                    if (!image.firebaseId) {
+                        imagesToUpload.push({cardId, index: i, image, reason: 'no-firebase-id'});
+                    }
+                    // 2순위: firebaseId는 있지만 firebaseUrl이 없는 업로드 실패 이미지
+                    else if (image.firebaseId && !image.firebaseUrl) {
+                        imagesToUpload.push({cardId, index: i, image, reason: 'upload-failed'});
+                    }
+                    // 3순위: Firebase URL이 있지만 실제 접근 불가능할 수 있는 이미지 (선택적)
+                    else if (image.firebaseUrl && image.src && image.src.startsWith('data:')) {
+                        imagesToUpload.push({cardId, index: i, image, reason: 'url-check-needed'});
+                    }
+                }
+            }
+            
+            totalTargetImages = imagesToUpload.length;
+            
+            if (totalTargetImages === 0) {
+                // 강제 재업로드 옵션 제공
+                const forceReupload = confirm('업로드할 로컬 전용 이미지가 없습니다.\n\n모든 이미지를 강제로 다시 업로드하시겠습니까?\n(네트워크 문제로 동기화가 안 된 경우에 유용합니다)');
+                
+                if (forceReupload) {
+                    // 모든 이미지를 강제 재업로드 대상에 추가
+                    for (const cardId in imageData) {
+                        for (let i = 0; i < imageData[cardId].length; i++) {
+                            const image = imageData[cardId][i];
+                            if (image.src) {
+                                imagesToUpload.push({cardId, index: i, image, reason: 'force-reupload'});
+                            }
+                        }
+                    }
+                    totalTargetImages = imagesToUpload.length;
+                    
+                    if (totalTargetImages === 0) {
+                        uploadBtn.disabled = false;
+                        uploadBtn.textContent = '☁️ 로컬 데이터 클라우드 업로드';
+                        return;
+                    }
+                } else {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = '☁️ 로컬 데이터 클라우드 업로드';
+                    return;
+                }
+            }
+            
+            updateFirebaseStatus(`📤 ${totalTargetImages}개 이미지를 Firebase에 업로드 중...`);
+            
+            try {
+                for (const {cardId, index, image, reason} of imagesToUpload) {
+                    try {
+                        console.log(`업로드 시도: ${cardId}-${index} (${reason})`);
+                        
+                        // base64를 Blob으로 변환
+                        const response = await fetch(image.src);
+                        const blob = await response.blob();
+                        
+                        // Firebase Storage에 업로드
+                        const { ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp } = window.firebaseModules;
+                        const storage = window.firebaseStorage;
+                        const firestore = window.firebaseFirestore;
+                        
+                        const fileName = `${cardId}-${Date.now()}-${index}.jpg`;
+                        const storageRef = ref(storage, `images/${fileName}`);
+                        
+                        await uploadBytes(storageRef, blob);
+                        const downloadURL = await getDownloadURL(storageRef);
+                        
+                        // Firestore에 메타데이터 저장
+                        const docRef = await addDoc(collection(firestore, 'images'), {
+                            cardId: cardId,
+                            fileName: fileName,
+                            url: downloadURL,
+                            uploadTime: serverTimestamp(),
+                            originalName: image.name || fileName,
+                            uploadReason: reason
+                        });
+                        
+                        // 로컬 데이터 업데이트
+                        imageData[cardId][index].firebaseId = fileName;
+                        imageData[cardId][index].docId = docRef.id;
+                        imageData[cardId][index].firebaseUrl = downloadURL;
+                        
+                        uploadCount++;
+                        updateFirebaseStatus(`📤 업로드 진행 중... (${uploadCount}/${totalTargetImages})`);
+                        
+                        console.log(`업로드 성공: ${cardId}-${index}`);
+                        
+                    } catch (error) {
+                        console.error(`이미지 업로드 실패 (${cardId}-${index}):`, error);
+                        failedImages++;
+                    }
+                }
+                
+                // 로컬 스토리지 업데이트
+                saveDataToStorage();
+                
+                // UI 새로고침
+                displayImages();
+                
+                if (failedImages === 0) {
+                    updateFirebaseStatus(`✅ ${uploadCount}개 이미지가 Firebase에 업로드되었습니다!`);
+                } else {
+                    updateFirebaseStatus(`⚠️ ${uploadCount}개 성공, ${failedImages}개 실패`);
+                }
+                
+            } catch (error) {
+                console.error('업로드 프로세스 오류:', error);
+                updateFirebaseStatus('❌ 업로드 중 오류가 발생했습니다', true);
+            }
+            
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '☁️ 로컬 데이터 클라우드 업로드';
+        }
+        
+        // 이미지 동기화 상태 확인
+        function getImageSyncStatus(image) {
+            if (image.firebaseId && image.firebaseUrl) {
+                return 'firebase';
+            } else {
+                return 'local';
+            }
+        }
+        
+        // 모든 카드의 이미지 다시 표시
+        function displayImages() {
+            Object.keys(imageData).forEach(cardId => {
+                updateCarousel(cardId);
+            });
+        }
+        
+        // Lightbox 열기
+        function openLightbox(cardId, imageIndex) {
+            const images = imageData[cardId] || [];
+            if (images.length === 0) return;
+            
+            currentLightboxCardId = cardId;
+            currentLightboxIndex = imageIndex;
+            
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImage = document.getElementById('lightbox-image');
+            const lightboxInfo = document.getElementById('lightbox-info');
+            
+            // 이미지 설정
+            const image = images[imageIndex];
+            lightboxImage.src = image.src;
+            lightboxImage.alt = image.name;
+            
+            // 정보 설정
+            lightboxInfo.textContent = `${image.name} (${imageIndex + 1}/${images.length})`;
+            
+            // 네비게이션 버튼 표시/숨김
+            const prevBtn = lightbox.querySelector('.lightbox-nav.prev');
+            const nextBtn = lightbox.querySelector('.lightbox-nav.next');
+            
+            if (images.length > 1) {
+                prevBtn.style.display = 'flex';
+                nextBtn.style.display = 'flex';
+            } else {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            }
+            
+            // Lightbox 표시
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden'; // 스크롤 방지
+        }
+        
+        // Lightbox 닫기
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = ''; // 스크롤 복원
+            currentLightboxCardId = null;
+            currentLightboxIndex = 0;
+        }
+        
+        // Lightbox 이전 이미지
+        function prevLightboxImage() {
+            if (!currentLightboxCardId) return;
+            
+            const images = imageData[currentLightboxCardId] || [];
+            if (images.length <= 1) return;
+            
+            currentLightboxIndex = currentLightboxIndex > 0 ? currentLightboxIndex - 1 : images.length - 1;
+            
+            const lightboxImage = document.getElementById('lightbox-image');
+            const lightboxInfo = document.getElementById('lightbox-info');
+            const image = images[currentLightboxIndex];
+            
+            lightboxImage.src = image.src;
+            lightboxImage.alt = image.name;
+            lightboxInfo.textContent = `${image.name} (${currentLightboxIndex + 1}/${images.length})`;
+        }
+        
+        // Lightbox 다음 이미지
+        function nextLightboxImage() {
+            if (!currentLightboxCardId) return;
+            
+            const images = imageData[currentLightboxCardId] || [];
+            if (images.length <= 1) return;
+            
+            currentLightboxIndex = currentLightboxIndex < images.length - 1 ? currentLightboxIndex + 1 : 0;
+            
+            const lightboxImage = document.getElementById('lightbox-image');
+            const lightboxInfo = document.getElementById('lightbox-info');
+            const image = images[currentLightboxIndex];
+            
+            lightboxImage.src = image.src;
+            lightboxImage.alt = image.name;
+            lightboxInfo.textContent = `${image.name} (${currentLightboxIndex + 1}/${images.length})`;
+        }
+        
+        // 키보드 이벤트 처리
+        document.addEventListener('keydown', function(e) {
+            const lightbox = document.getElementById('lightbox');
+            if (!lightbox.classList.contains('active')) return;
+            
+            if (e.key === 'Escape') {
+                closeLightbox();
+            } else if (e.key === 'ArrowLeft') {
+                prevLightboxImage();
+            } else if (e.key === 'ArrowRight') {
+                nextLightboxImage();
+            }
+        });
+
+        // 초기화 - 기존 이미지들을 imageData에 등록하고 localStorage에서 데이터 복원
+        // 초기 이미지 데이터 (하드코딩 대신 동적 초기화)
+        const initialImageData = {
+            'landlord-2': [{ src: 'images/17_계단난간손잡이설치2.jpg', name: '계단 난간 손잡이', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-3': [{ src: 'images/09_2층창고누수확인.jpg', name: '2층 화장실 천장 누수', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-4': [{ src: 'images/03_바닥1.jpg', name: '1층 바닥 보수', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-5': [{ src: 'images/04_바닥2.jpg', name: '2층 바닥 보수', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-6': [{ src: 'images/16_4층화장실바닥누수확인.jpg', name: '4층 화장실 바닥 누수', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-8': [{ src: 'images/12_2층폴딩도어유격1.jpg', name: '2층 폴딩도어 유격1', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-9': [{ src: 'images/13_2층폴딩도어유격2.jpg', name: '2층 폴딩도어 유격2', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-11': [{ src: 'images/01_switch.jpg', name: '스위치 점검', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-12': [{ src: 'images/02_communication.jpg', name: '통신함 커버', timestamp: '2025-05-29T13:52:00.000Z' }],
+            'landlord-13': [{ src: 'images/05_계단손잡이.jpg', name: '계단 손잡이 보수', timestamp: '2025-05-29T13:52:00.000Z' }]
+        };
+
+        // 초기 이미지 데이터 로드 (빈 localStorage일 때만)
+        function loadInitialImages() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored || Object.keys(JSON.parse(stored || '{}')).length === 0) {
+                console.log('LocalStorage가 비어있음. 초기 이미지 데이터 로드');
+                imageData = { ...initialImageData };
+                saveDataToStorage();
+                
+                // UI 업데이트
+                Object.keys(imageData).forEach(cardId => {
+                    updateCarousel(cardId);
+                });
+                console.log('초기 이미지 데이터 로드 완료');
+            }
+        }
+
+        // 페이지 초기화 (중복 방지 강화)
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 페이지 초기화 시작 (중복 방지 모드)');
+            
+            // Firebase 상태 초기화
+            if (window.firebaseEnabled) {
+                updateFirebaseStatus('✅ Firebase v11.6.0 연결됨 (하이브리드 모드)');
+            } else {
+                updateFirebaseStatus('📱 로컬 전용 모드 (Firebase 비활성화)');
+            }
+            
+            // 데이터 로딩 플래그
+            let isDataLoaded = false;
+            
+            // 1단계: 먼저 localStorage에서 데이터 복원
+            console.log('📂 1단계: LocalStorage에서 데이터 로드');
+            loadDataFromStorage();
+            const localImageCount = Object.values(imageData).reduce((total, arr) => total + arr.length, 0);
+            console.log(`📂 LocalStorage에서 ${localImageCount}개 이미지 로드됨`);
+            
+            // 2단계: Firebase에서 데이터 불러오기 시도 (중복 방지)
+            if (window.firebaseFirestore) {
+                console.log('☁️ 2단계: Firebase에서 데이터 동기화');
+                loadDataFromFirebase().then((hasFirebaseData) => {
+                    const finalImageCount = Object.values(imageData).reduce((total, arr) => total + arr.length, 0);
+                    console.log(`☁️ Firebase 동기화 완료: 최종 ${finalImageCount}개 이미지`);
+                    
+                    // Firebase 데이터가 없고 LocalStorage도 비어있으면 초기 데이터 로드
+                    if (!hasFirebaseData && localImageCount === 0 && !isDataLoaded) {
+                        console.log('🎯 초기 데이터 로드 실행');
+                        loadInitialImages();
+                        saveDataToStorage();
+                        isDataLoaded = true;
+                    }
+                }).catch(error => {
+                    console.error('Firebase 로딩 실패:', error);
+                    
+                    // Firebase 실패시 LocalStorage가 비어있으면 초기 데이터 로드
+                    if (localImageCount === 0 && !isDataLoaded) {
+                        console.log('🎯 Firebase 실패 → 초기 데이터 로드');
+                        loadInitialImages();
+                        saveDataToStorage();
+                        isDataLoaded = true;
+                    }
+                });
+            } else {
+                // Firebase가 없으면 localStorage가 비어있을 때만 초기 데이터 로드
+                if (localImageCount === 0 && !isDataLoaded) {
+                    console.log('🎯 Firebase 없음 → 초기 데이터 로드');
+                    loadInitialImages();
+                    saveDataToStorage();
+                    isDataLoaded = true;
+                }
+            }
+            
+            console.log('🎉 페이지 초기화 완료');
+        });
+        
+        // 페이지 언로드 시 데이터 저장 (안전장치)
+        window.addEventListener('beforeunload', function() {
+            saveDataToStorage();
+        });
+    </script>
+    
+    <!-- 버전 정보 -->
+    <div class="version-info">
+        🚫 v2.5.0 - 중복 방지 시스템 강화 🚫
+    </div>
+</body>
+</html>/* Cache bust Fri May 30 23:29:58 KST 2025 */
